@@ -4,6 +4,7 @@ const debug = require('debug')('scrape-twitter:query')
 const https = require('https')
 
 const DEFAULT_TIMEOUT = 10000
+const IE11_UA_STRING = 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';
 
 const checkStatus = response => {
   const requiresLogin = /login\?redirect_after_login/.test(response.url || '')
@@ -57,7 +58,10 @@ const query = (url, options, fetcher = fetch) => {
   debug('query on resource:', resource)
   return fetcher(resource, {
     agent: https.globalAgent,
-    timeout: process.env.SCRAPE_TWITTER_TIMEOUT || DEFAULT_TIMEOUT
+    timeout: process.env.SCRAPE_TWITTER_TIMEOUT || DEFAULT_TIMEOUT,
+    headers: {
+      'User-Agent': IE11_UA_STRING
+    }
   })
     .then(checkStatus)
     .then(toJson)
