@@ -122,6 +122,9 @@ var parseTweet = function parseTweet($, element) {
   var _untouchedText = $(element).find('.tweet-text').first().text();
 
   var screenName = $(element).attr('data-screen-name');
+  var avatar = $(element).find('.js-action-profile-avatar').attr('src');
+  var name = $(element).attr('data-name');
+  var url = 'https://twitter.com' + $(element).attr('data-permalink-path');
   var id = $(element).attr('data-item-id');
   var text = parseText($, $(element).find('.tweet-text').first());
   var images = parseImages($, element);
@@ -160,6 +163,9 @@ var parseTweet = function parseTweet($, element) {
 
   var tweet = {
     screenName: screenName,
+    name: name,
+    avatar: avatar,
+    url: url,
     id: id,
     time: time,
     isRetweet: isRetweet,
