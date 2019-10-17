@@ -104,6 +104,9 @@ const parseTweet = ($, element) => {
     .text()
 
   const screenName = $(element).attr('data-screen-name')
+  const avatar = $(element).find('.js-action-profile-avatar').attr('src')
+  const name = $(element).attr('data-name')
+  const url = `https://twitter.com${$(element).attr('data-permalink-path')}`
   const id = $(element).attr('data-item-id')
   const text = parseText(
     $,
@@ -163,6 +166,9 @@ const parseTweet = ($, element) => {
 
   const tweet = {
     screenName,
+    name,
+    avatar,
+    url,
     id,
     time,
     isRetweet,
