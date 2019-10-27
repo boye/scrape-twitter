@@ -2,6 +2,10 @@ const urlRegex = require('url-regex')
 
 const debug = require('debug')('scrape-twitter:parser')
 
+const POINTS_REPLY = 1
+const POINTS_LIKE = 2
+const POINTS_RETWEET = 3
+
 const flatten = arr => arr.reduce((prev, curr) => prev.concat(curr), [])
 
 const parseText = ($, textElement) => {
@@ -23,8 +27,8 @@ const parseActionCount = ($, element, action) => {
   )
   return wrapper.length !== 0
     ? +$(wrapper)
-      .first()
-      .attr('data-tweet-stat-count')
+        .first()
+        .attr('data-tweet-stat-count')
     : 0
 }
 
@@ -104,7 +108,9 @@ const parseTweet = ($, element) => {
     .text()
 
   const screenName = $(element).attr('data-screen-name')
-  const avatar = $(element).find('.js-action-profile-avatar').attr('src')
+  const avatar = $(element)
+    .find('.js-action-profile-avatar')
+    .attr('src')
   const name = $(element).attr('data-name')
   const url = `https://twitter.com${$(element).attr('data-permalink-path')}`
   const id = $(element).attr('data-item-id')
@@ -141,9 +147,15 @@ const parseTweet = ($, element) => {
   const replyCount = parseActionCount($, element, 'reply')
   const retweetCount = parseActionCount($, element, 'retweet')
   const favoriteCount = parseActionCount($, element, 'favorite')
+  const shillPoints =
+    (replyCount * POINTS_REPLY) +
+    (favoriteCount * POINTS_LIKE) +
+    (retweetCount * POINTS_RETWEET)
+
   debug(`tweet ${id} received ${replyCount} replies`)
   debug(`tweet ${id} received ${retweetCount} retweets`)
   debug(`tweet ${id} received ${favoriteCount} favorites`)
+  debug(`tweet ${id} received ${shillPoints} shillpoints`)
 
   const quotedTweetElement = $(element).find('.QuoteTweet-innerContainer')
   const quotedScreenName = quotedTweetElement.attr('data-screen-name')
@@ -181,7 +193,8 @@ const parseTweet = ($, element) => {
     urls,
     replyCount,
     retweetCount,
-    favoriteCount
+    favoriteCount,
+    shillPoints
   }
   if (quote) {
     tweet.quote = quote
@@ -395,9 +408,9 @@ const toThreadedTweets = id => ({ $, _minPosition }) => {
         .first()
       const showMoreId = showMoreElement.attr('href')
         ? showMoreElement
-          .attr('href')
-          .match(/\d+/)
-          .pop()
+            .attr('href')
+            .match(/\d+/)
+            .pop()
         : undefined
       const tweetElements = $(threadedConversationElement)
         .find(MATCH_TWEETS_ONLY)

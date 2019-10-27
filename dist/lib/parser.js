@@ -10,6 +10,10 @@ var urlRegex = require('url-regex');
 
 var debug = require('debug')('scrape-twitter:parser');
 
+var POINTS_REPLY = 1;
+var POINTS_LIKE = 2;
+var POINTS_RETWEET = 3;
+
 var flatten = function flatten(arr) {
   return arr.reduce(function (prev, curr) {
     return prev.concat(curr);
@@ -143,9 +147,12 @@ var parseTweet = function parseTweet($, element) {
   var replyCount = parseActionCount($, element, 'reply');
   var retweetCount = parseActionCount($, element, 'retweet');
   var favoriteCount = parseActionCount($, element, 'favorite');
+  var shillPoints = replyCount * POINTS_REPLY + favoriteCount * POINTS_LIKE + retweetCount * POINTS_RETWEET;
+
   debug('tweet ' + id + ' received ' + replyCount + ' replies');
   debug('tweet ' + id + ' received ' + retweetCount + ' retweets');
   debug('tweet ' + id + ' received ' + favoriteCount + ' favorites');
+  debug('tweet ' + id + ' received ' + shillPoints + ' shillpoints');
 
   var quotedTweetElement = $(element).find('.QuoteTweet-innerContainer');
   var quotedScreenName = quotedTweetElement.attr('data-screen-name');
@@ -178,7 +185,8 @@ var parseTweet = function parseTweet($, element) {
     urls: urls,
     replyCount: replyCount,
     retweetCount: retweetCount,
-    favoriteCount: favoriteCount
+    favoriteCount: favoriteCount,
+    shillPoints: shillPoints
   };
   if (quote) {
     tweet.quote = quote;
