@@ -2,8 +2,6 @@
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 var urlRegex = require('url-regex');
@@ -30,7 +28,7 @@ var parseText = function parseText($, textElement) {
   // Remove hidden URLS
   textElement.find('a.u-hidden').remove();
 
-  return textElement.text();
+  return textElement.text().replace(/(\r\n|\n|\r)/gm, '').trim();
 };
 
 var parseActionCount = function parseActionCount($, element, action) {
@@ -118,18 +116,14 @@ var parseUrlsFromText = function parseUrlsFromText(text) {
   return urls;
 };
 
-var fromUnixEpochToISO8601 = function fromUnixEpochToISO8601(unixDateString) {
-  return new Date(+unixDateString).toISOString();
-};
-
 var parseTweet = function parseTweet($, element) {
   var _untouchedText = $(element).find('.tweet-text').first().text();
 
-  var screenName = $(element).attr('data-screen-name');
-  var avatar = $(element).find('.js-action-profile-avatar').attr('src');
-  var name = $(element).attr('data-name');
-  var url = 'https://twitter.com' + $(element).attr('data-permalink-path');
-  var id = $(element).attr('data-item-id');
+  var screenName = parseText($, $(element).find('.user-info .username'));
+  var avatar = $(element).find('.avatar img').attr('src');
+  var name = parseText($, $(element).find('.fullname'));
+  var url = 'https://twitter.com' + ($(element).attr('href') || $(element).find('.action-last a').attr('href').replace('/actions', ''));
+  var id = $(element).find('.tweet-text').first().attr('data-id');
   var text = parseText($, $(element).find('.tweet-text').first());
   var images = parseImages($, element);
 
@@ -142,7 +136,12 @@ var parseTweet = function parseTweet($, element) {
   var isReplyTo = $(element).attr('data-is-reply-to') === 'true' || $(element).attr('data-has-parent-tweet') === 'true';
   var isPinned = $(element).hasClass('user-pinned');
   var isRetweet = $(element).find('.js-retweet-text').length !== 0;
-  var time = fromUnixEpochToISO8601($(element).find('.js-short-timestamp').first().attr('data-time-ms'));
+  // const time = fromUnixEpochToISO8601(
+  //   $(element)
+  //     .find('.js-short-timestamp')
+  //     .first()
+  //     .attr('data-time-ms')
+  // )
 
   var replyCount = parseActionCount($, element, 'reply');
   var retweetCount = parseActionCount($, element, 'retweet');
@@ -174,7 +173,7 @@ var parseTweet = function parseTweet($, element) {
     avatar: avatar,
     url: url,
     id: id,
-    time: time,
+    // time,
     isRetweet: isRetweet,
     isPinned: isPinned,
     isReplyTo: isReplyTo,
@@ -201,47 +200,22 @@ var toNumber = function toNumber(value) {
   return parseInt((value || '').replace(/[^0-9]/g, '')) || 0;
 };
 
-var fromJoinDateToIso8601 = function fromJoinDateToIso8601(joinDateString) {
-  var _joinDateString$repla = joinDateString.replace('Joined', '').trim().split(' '),
-      _joinDateString$repla2 = _slicedToArray(_joinDateString$repla, 2),
-      month = _joinDateString$repla2[0],
-      year = _joinDateString$repla2[1];
-
-  var months = {
-    January: '01',
-    February: '02',
-    March: '03',
-    April: '04',
-    May: '05',
-    June: '06',
-    July: '07',
-    August: '08',
-    September: '09',
-    October: '10',
-    November: '11',
-    December: '12'
-  };
-  return year + '-' + months[month] + '-01T00:00:00.000Z';
-};
-
 var toTwitterProfile = function toTwitterProfile(_ref) {
   var $ = _ref.$;
 
-  var $canopy = $('.ProfileCanopy');
-  var $header = $('.ProfileHeaderCard');
-  var $nav = $('.ProfileNav');
+  var $canopy = $('.profile');
+  var $header = $('.profile-details');
+  var $nav = $('.profile-stats');
 
-  var profileImage = $canopy.find('.ProfileAvatar-image').attr('src');
-  var backgroundImage = $canopy.find('.ProfileCanopy-headerBg img').attr('src');
-  var screenName = $header.find('.ProfileHeaderCard-screenname > a').first().text().trim().substring(1);
-  var name = parseText($, $header.find('.ProfileHeaderCard-name a').first());
-  var bio = parseText($, $header.find('.ProfileHeaderCard-bio').first());
-  var location = $header.find('.ProfileHeaderCard-locationText').first().text().trim();
-  var url = $header.find('.ProfileHeaderCard-urlText a').first().attr('title');
-  var joinDate = fromJoinDateToIso8601($header.find('.ProfileHeaderCard-joinDate .ProfileHeaderCard-joinDateText').first().text());
-  var tweetCount = toNumber($nav.find('.ProfileNav-item--tweets .ProfileNav-value').first().attr('data-count'));
-  var followingCount = toNumber($nav.find('.ProfileNav-item--following .ProfileNav-value').first().attr('data-count'));
-  var followerCount = toNumber($nav.find('.ProfileNav-item--followers .ProfileNav-value').first().attr('data-count'));
+  var profileImage = $canopy.find('.avatar img').attr('src');
+  var screenName = $header.find('.screen-name').first().text();
+  var name = parseText($, $header.find('.fullname').first());
+  var bio = parseText($, $header.find('.bio > div').first());
+  var location = $header.find('.location').first().text().trim();
+  var url = $header.find('.url a').first().attr('data-url');
+  var tweetCount = toNumber($nav.find('.stat').first().find('.statnum').text());
+  var followingCount = toNumber($nav.find('.stat').eq(1).find('.statnum').text());
+  var followerCount = toNumber($nav.find('.stat').eq(2).find('.statnum').text());
   var likeCount = toNumber($nav.find('.ProfileNav-item--favorites .ProfileNav-value').first().attr('data-count'));
 
   var userMentions = parseUsernamesFromText(bio);
@@ -251,7 +225,6 @@ var toTwitterProfile = function toTwitterProfile(_ref) {
   var userProfile = {
     screenName: screenName,
     profileImage: profileImage,
-    backgroundImage: backgroundImage,
     name: name,
     bio: bio,
     userMentions: userMentions,
@@ -259,7 +232,6 @@ var toTwitterProfile = function toTwitterProfile(_ref) {
     urls: urls,
     location: location,
     url: url,
-    joinDate: joinDate,
     tweetCount: tweetCount,
     followingCount: followingCount,
     followerCount: followerCount,
@@ -330,10 +302,10 @@ var toThreadedTweets = function toThreadedTweets(id) {
 
     var MATCH_STREAM_CONTAINER = '.stream-container';
     var MATCH_ANCESTOR_TWEETS_ONLY = '.permalink-ancestor-tweet';
-    var MATCH_PERMALINK_TWEET_ONLY = '.permalink-tweet:not(.modal-body)';
-    var MATCH_THREADS = '.ThreadedConversation, .ThreadedConversation--loneTweet';
-    var MATCH_SHOW_MORE = '.ThreadedConversation-showMore a';
-    var MATCH_TWEETS_ONLY = '.tweet:not(.modal-body)';
+    var MATCH_PERMALINK_TWEET_ONLY = '.tweet-detail';
+    var MATCH_THREADS = '.replies .tweet';
+    var MATCH_SHOW_MORE = '.metadata a';
+    var MATCH_TWEETS_ONLY = '.tweet';
 
     var streamContainerElement = $(MATCH_STREAM_CONTAINER);
     var minPosition = _minPosition || streamContainerElement.attr('data-min-position');
@@ -357,7 +329,9 @@ var toThreadedTweets = function toThreadedTweets(id) {
     var threadedConversations = threadElements.map(function (threadedConversationElement) {
       var showMoreElement = $(threadedConversationElement).find(MATCH_SHOW_MORE).first();
       var showMoreId = showMoreElement.attr('href') ? showMoreElement.attr('href').match(/\d+/).pop() : undefined;
-      var tweetElements = $(threadedConversationElement).find(MATCH_TWEETS_ONLY).toArray();
+      var tweetElements = $(threadedConversationElement)
+      // .find(MATCH_TWEETS_ONLY)
+      .toArray();
 
       var lastTweetId = id;
       var tweets = [];

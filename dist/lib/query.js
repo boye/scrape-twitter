@@ -65,7 +65,8 @@ var query = function query(url, options) {
     agent: https.globalAgent,
     timeout: process.env.SCRAPE_TWITTER_TIMEOUT || DEFAULT_TIMEOUT,
     headers: {
-      'User-Agent': IE11_UA_STRING
+      'User-Agent': IE11_UA_STRING,
+      cookie: 'm5=off'
     }
   }).then(checkStatus).then(toJson).then(toHtml);
 };

@@ -18,7 +18,7 @@ var getUserTimeline = function getUserTimeline(username, startingId, _ref2) {
   var _ref2$replies = _ref2.replies,
       replies = _ref2$replies === undefined ? false : _ref2$replies;
 
-  var url = 'https://twitter.com/i/profiles/show/' + username + '/timeline' + (replies ? '/with_replies' : '');
+  var url = 'https://mobile.twitter.com/i/profiles/show/' + username + '/timeline' + (replies ? '/with_replies' : '');
   var options = {
     include_available_features: '1',
     include_entities: '1',
@@ -28,7 +28,7 @@ var getUserTimeline = function getUserTimeline(username, startingId, _ref2) {
 };
 
 var getUserMediaTimeline = function getUserMediaTimeline(username, maxPosition) {
-  var url = 'https://twitter.com/i/search/timeline';
+  var url = 'https://mobile.twitter.com/i/search/timeline';
   var options = {
     vertical: 'default',
     src: 'typd',
@@ -42,7 +42,7 @@ var getUserMediaTimeline = function getUserMediaTimeline(username, maxPosition) 
 };
 
 var getUserLikes = function getUserLikes(username, startingId) {
-  var url = 'https://twitter.com/' + username + '/likes/timeline';
+  var url = 'https://mobile.twitter.com/' + username + '/likes/timeline';
   var options = {
     include_available_features: '1',
     include_entities: '1',
@@ -52,7 +52,7 @@ var getUserLikes = function getUserLikes(username, startingId) {
 };
 
 var getUserList = function getUserList(username, list, startingId) {
-  var url = 'https://twitter.com/' + username + '/lists/' + list + '/timeline';
+  var url = 'https://mobile.twitter.com/' + username + '/lists/' + list + '/timeline';
   var options = {
     max_position: startingId
   };
@@ -61,10 +61,10 @@ var getUserList = function getUserList(username, list, startingId) {
 
 var getUserConnections = function getUserConnections(username, type, maxPosition) {
   if (typeof maxPosition === 'undefined') {
-    var url = 'https://twitter.com/' + username + '/' + type;
+    var url = 'https://mobile.twitter.com/' + username + '/' + type;
     return query.get(url, fetchWithCookie).then(toCheerio).then(parser.toConnections);
   } else {
-    var _url = 'https://twitter.com/' + username + '/' + type + '/users';
+    var _url = 'https://mobile.twitter.com/' + username + '/' + type + '/users';
     var options = {
       include_available_features: '1',
       include_entities: '1',
@@ -76,10 +76,10 @@ var getUserConnections = function getUserConnections(username, type, maxPosition
 
 var getUserConversation = function getUserConversation(username, id, maxPosition) {
   if (typeof maxPosition === 'undefined') {
-    var url = 'https://twitter.com/' + username + '/status/' + id;
+    var url = 'https://mobile.twitter.com/' + username + '/status/' + id + '?p=v';
     return query.get(url).then(toCheerio).then(parser.toThreadedTweets(id));
   } else {
-    var _url2 = 'https://twitter.com/i/' + username + '/conversation/' + id;
+    var _url2 = 'https://mobile.twitter.com/i/' + username + '/conversation/' + id + '?p=v';
     var options = {
       include_available_features: '1',
       include_entities: '1',
@@ -90,12 +90,12 @@ var getUserConversation = function getUserConversation(username, id, maxPosition
 };
 
 var getThreadedConversation = function getThreadedConversation(id) {
-  var url = 'https://twitter.com/i/threaded_conversation/' + id;
+  var url = 'https://mobile.twitter.com/i/threaded_conversation/' + id;
   return query(url).then(toCheerio).then(parser.toThreadedTweets(id));
 };
 
 var getUserProfile = function getUserProfile(username) {
-  var url = 'https://twitter.com/' + username;
+  var url = 'https://mobile.twitter.com/' + username + '?p=v';
   return query.get(url).then(toCheerio).then(parser.toTwitterProfile);
 };
 

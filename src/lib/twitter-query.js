@@ -9,7 +9,7 @@ const toCheerio = ({ html, _minPosition }) => ({
 })
 
 const getUserTimeline = (username, startingId, { replies = false }) => {
-  const url = `https://twitter.com/i/profiles/show/${username}/timeline${
+  const url = `https://mobile.twitter.com/i/profiles/show/${username}/timeline${
     replies ? '/with_replies' : ''
   }`
   const options = {
@@ -23,7 +23,7 @@ const getUserTimeline = (username, startingId, { replies = false }) => {
 }
 
 const getUserMediaTimeline = (username, maxPosition) => {
-  const url = 'https://twitter.com/i/search/timeline'
+  const url = 'https://mobile.twitter.com/i/search/timeline'
   const options = {
     vertical: 'default',
     src: 'typd',
@@ -39,7 +39,7 @@ const getUserMediaTimeline = (username, maxPosition) => {
 }
 
 const getUserLikes = (username, startingId) => {
-  const url = `https://twitter.com/${username}/likes/timeline`
+  const url = `https://mobile.twitter.com/${username}/likes/timeline`
   const options = {
     include_available_features: '1',
     include_entities: '1',
@@ -51,7 +51,7 @@ const getUserLikes = (username, startingId) => {
 }
 
 const getUserList = (username, list, startingId) => {
-  const url = `https://twitter.com/${username}/lists/${list}/timeline`
+  const url = `https://mobile.twitter.com/${username}/lists/${list}/timeline`
   const options = {
     max_position: startingId
   }
@@ -62,13 +62,13 @@ const getUserList = (username, list, startingId) => {
 
 const getUserConnections = (username, type, maxPosition) => {
   if (typeof maxPosition === 'undefined') {
-    const url = `https://twitter.com/${username}/${type}`
+    const url = `https://mobile.twitter.com/${username}/${type}`
     return query
       .get(url, fetchWithCookie)
       .then(toCheerio)
       .then(parser.toConnections)
   } else {
-    const url = `https://twitter.com/${username}/${type}/users`
+    const url = `https://mobile.twitter.com/${username}/${type}/users`
     const options = {
       include_available_features: '1',
       include_entities: '1',
@@ -82,13 +82,13 @@ const getUserConnections = (username, type, maxPosition) => {
 
 const getUserConversation = (username, id, maxPosition) => {
   if (typeof maxPosition === 'undefined') {
-    const url = `https://twitter.com/${username}/status/${id}`
+    const url = `https://mobile.twitter.com/${username}/status/${id}?p=v`
     return query
       .get(url)
       .then(toCheerio)
       .then(parser.toThreadedTweets(id))
   } else {
-    const url = `https://twitter.com/i/${username}/conversation/${id}`
+    const url = `https://mobile.twitter.com/i/${username}/conversation/${id}?p=v`
     const options = {
       include_available_features: '1',
       include_entities: '1',
@@ -101,14 +101,14 @@ const getUserConversation = (username, id, maxPosition) => {
 }
 
 const getThreadedConversation = id => {
-  const url = `https://twitter.com/i/threaded_conversation/${id}`
+  const url = `https://mobile.twitter.com/i/threaded_conversation/${id}`
   return query(url)
     .then(toCheerio)
     .then(parser.toThreadedTweets(id))
 }
 
 const getUserProfile = username => {
-  const url = `https://twitter.com/${username}`
+  const url = `https://mobile.twitter.com/${username}?p=v`
   return query
     .get(url)
     .then(toCheerio)

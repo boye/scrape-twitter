@@ -18,7 +18,7 @@ const parseText = ($, textElement) => {
   // Remove hidden URLS
   textElement.find('a.u-hidden').remove()
 
-  return textElement.text()
+  return textElement.text().replace(/(\r\n|\n|\r)/gm, '').trim()
 }
 
 const parseActionCount = ($, element, action) => {
@@ -98,22 +98,19 @@ const parseUrlsFromText = text => {
   return urls
 }
 
-const fromUnixEpochToISO8601 = unixDateString =>
-  new Date(+unixDateString).toISOString()
-
 const parseTweet = ($, element) => {
   const _untouchedText = $(element)
     .find('.tweet-text')
     .first()
     .text()
 
-  const screenName = $(element).attr('data-screen-name')
+  const screenName = parseText($, $(element).find('.user-info .username'))
   const avatar = $(element)
-    .find('.js-action-profile-avatar')
+    .find('.avatar img')
     .attr('src')
-  const name = $(element).attr('data-name')
-  const url = `https://twitter.com${$(element).attr('data-permalink-path')}`
-  const id = $(element).attr('data-item-id')
+  const name = parseText($, $(element).find('.fullname'))
+  const url = `https://twitter.com${$(element).attr('href') || $(element).find('.action-last a').attr('href').replace('/actions', '')}`
+  const id = $(element).find('.tweet-text').first().attr('data-id')
   const text = parseText(
     $,
     $(element)
@@ -137,12 +134,12 @@ const parseTweet = ($, element) => {
     $(element).attr('data-has-parent-tweet') === 'true'
   const isPinned = $(element).hasClass('user-pinned')
   const isRetweet = $(element).find('.js-retweet-text').length !== 0
-  const time = fromUnixEpochToISO8601(
-    $(element)
-      .find('.js-short-timestamp')
-      .first()
-      .attr('data-time-ms')
-  )
+  // const time = fromUnixEpochToISO8601(
+  //   $(element)
+  //     .find('.js-short-timestamp')
+  //     .first()
+  //     .attr('data-time-ms')
+  // )
 
   const replyCount = parseActionCount($, element, 'reply')
   const retweetCount = parseActionCount($, element, 'retweet')
@@ -182,7 +179,7 @@ const parseTweet = ($, element) => {
     avatar,
     url,
     id,
-    time,
+    // time,
     isRetweet,
     isPinned,
     isReplyTo,
@@ -207,77 +204,47 @@ const parseTweet = ($, element) => {
 
 const toNumber = value => parseInt((value || '').replace(/[^0-9]/g, '')) || 0
 
-const fromJoinDateToIso8601 = joinDateString => {
-  const [month, year] = joinDateString
-    .replace('Joined', '')
-    .trim()
-    .split(' ')
-  const months = {
-    January: '01',
-    February: '02',
-    March: '03',
-    April: '04',
-    May: '05',
-    June: '06',
-    July: '07',
-    August: '08',
-    September: '09',
-    October: '10',
-    November: '11',
-    December: '12'
-  }
-  return `${year}-${months[month]}-01T00:00:00.000Z`
-}
-
 const toTwitterProfile = ({ $ }) => {
-  const $canopy = $('.ProfileCanopy')
-  const $header = $('.ProfileHeaderCard')
-  const $nav = $('.ProfileNav')
+  const $canopy = $('.profile')
+  const $header = $('.profile-details')
+  const $nav = $('.profile-stats')
 
-  const profileImage = $canopy.find('.ProfileAvatar-image').attr('src')
-  const backgroundImage = $canopy
-    .find('.ProfileCanopy-headerBg img')
-    .attr('src')
+  const profileImage = $canopy.find('.avatar img').attr('src')
   const screenName = $header
-    .find('.ProfileHeaderCard-screenname > a')
+    .find('.screen-name')
     .first()
     .text()
-    .trim()
-    .substring(1)
-  const name = parseText($, $header.find('.ProfileHeaderCard-name a').first())
-  const bio = parseText($, $header.find('.ProfileHeaderCard-bio').first())
+  const name = parseText($, $header.find('.fullname').first())
+  const bio = parseText($, $header.find('.bio > div').first())
   const location = $header
-    .find('.ProfileHeaderCard-locationText')
+    .find('.location')
     .first()
     .text()
     .trim()
   const url = $header
-    .find('.ProfileHeaderCard-urlText a')
+    .find('.url a')
     .first()
-    .attr('title')
-  const joinDate = fromJoinDateToIso8601(
-    $header
-      .find('.ProfileHeaderCard-joinDate .ProfileHeaderCard-joinDateText')
-      .first()
-      .text()
-  )
+    .attr('data-url')
   const tweetCount = toNumber(
     $nav
-      .find('.ProfileNav-item--tweets .ProfileNav-value')
+      .find('.stat')
       .first()
-      .attr('data-count')
+      .find('.statnum')
+      .text()
   )
   const followingCount = toNumber(
     $nav
-      .find('.ProfileNav-item--following .ProfileNav-value')
-      .first()
-      .attr('data-count')
+      .find('.stat')
+      .eq(1)
+      .find('.statnum')
+      .text()
   )
   const followerCount = toNumber(
     $nav
-      .find('.ProfileNav-item--followers .ProfileNav-value')
-      .first()
-      .attr('data-count')
+      .find('.stat')
+      .eq(2)
+      .find('.statnum')
+      .text()
   )
   const likeCount = toNumber(
     $nav
@@ -293,7 +260,6 @@ const toTwitterProfile = ({ $ }) => {
   const userProfile = {
     screenName,
     profileImage,
-    backgroundImage,
     name,
     bio,
     userMentions,
@@ -301,7 +267,6 @@ const toTwitterProfile = ({ $ }) => {
     urls,
     location,
     url,
-    joinDate,
     tweetCount,
     followingCount,
     followerCount,
@@ -372,11 +337,10 @@ const toTweets = ({ $ }) => {
 const toThreadedTweets = id => ({ $, _minPosition }) => {
   const MATCH_STREAM_CONTAINER = '.stream-container'
   const MATCH_ANCESTOR_TWEETS_ONLY = '.permalink-ancestor-tweet'
-  const MATCH_PERMALINK_TWEET_ONLY = '.permalink-tweet:not(.modal-body)'
-  const MATCH_THREADS =
-    '.ThreadedConversation, .ThreadedConversation--loneTweet'
-  const MATCH_SHOW_MORE = '.ThreadedConversation-showMore a'
-  const MATCH_TWEETS_ONLY = '.tweet:not(.modal-body)'
+  const MATCH_PERMALINK_TWEET_ONLY = '.tweet-detail'
+  const MATCH_THREADS = '.replies .tweet'
+  const MATCH_SHOW_MORE = '.metadata a'
+  const MATCH_TWEETS_ONLY = '.tweet'
 
   const streamContainerElement = $(MATCH_STREAM_CONTAINER)
   const minPosition =
@@ -413,7 +377,7 @@ const toThreadedTweets = id => ({ $, _minPosition }) => {
             .pop()
         : undefined
       const tweetElements = $(threadedConversationElement)
-        .find(MATCH_TWEETS_ONLY)
+        // .find(MATCH_TWEETS_ONLY)
         .toArray()
 
       let lastTweetId = id
