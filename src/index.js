@@ -6,7 +6,9 @@ const TweetStream = require('./lib/tweet-stream')
 const ListStream = require('./lib/list-stream')
 const LikeStream = require('./lib/like-stream')
 const ConnectionStream = require('./lib/connection-stream')
-const getUserProfile = require('./lib/twitter-query').getUserProfile
+const twitterQuery = require('./lib/twitter-query')
+const getUserProfile = twitterQuery.getUserProfile
+const getUserConversation = twitterQuery.getUserConversation
 
 module.exports = {
   TimelineStream,
@@ -17,5 +19,7 @@ module.exports = {
   ListStream,
   LikeStream,
   ConnectionStream,
+  twitterQuery,
+  getUserConversation,
   getUserProfile
 }
