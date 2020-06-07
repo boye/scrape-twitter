@@ -8,7 +8,9 @@ var TweetStream = require('./lib/tweet-stream');
 var ListStream = require('./lib/list-stream');
 var LikeStream = require('./lib/like-stream');
 var ConnectionStream = require('./lib/connection-stream');
-var getUserProfile = require('./lib/twitter-query').getUserProfile;
+var twitterQuery = require('./lib/twitter-query');
+var getUserProfile = twitterQuery.getUserProfile;
+var getUserConversation = twitterQuery.getUserConversation;
 
 module.exports = {
   TimelineStream: TimelineStream,
@@ -19,5 +21,7 @@ module.exports = {
   ListStream: ListStream,
   LikeStream: LikeStream,
   ConnectionStream: ConnectionStream,
+  twitterQuery: twitterQuery,
+  getUserConversation: getUserConversation,
   getUserProfile: getUserProfile
 };
