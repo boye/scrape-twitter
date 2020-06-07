@@ -66,90 +66,82 @@ var ConversationStream = function (_Readable) {
       debug('ConversationStream is now locked');
       twitterQuery.getUserConversation(this.username, this.id, this._lastMinPosition).then(function (tweets) {
         var extendedTweets = tweets.reduce(function (ets, ct, idx) {
-          var _showMoreTweetsFromConversation = ct._showMoreTweetsFromConversation;
-          delete ct._showMoreTweetsFromConversation;
+          // const _showMoreTweetsFromConversation =
+          //   ct._showMoreTweetsFromConversation
+          // delete ct._showMoreTweetsFromConversation
 
           ets.push(ct);
-          if (_showMoreTweetsFromConversation) {
-            ets.push(twitterQuery.getThreadedConversation(_showMoreTweetsFromConversation));
-          }
+          // if (_showMoreTweetsFromConversation) {
+          //   ets.push(
+          //     twitterQuery.getThreadedConversation(
+          //       _showMoreTweetsFromConversation
+          //     )
+          //   )
+          // }
 
           return ets;
         }, []);
 
-        return Promise.all(extendedTweets).then(flatten);
-      }).then(function (tweets) {
-        var lastReadTweetId = tweets.length ? tweets[tweets.length - 1].id : undefined;
-        if (_this2._lastReadTweetId === lastReadTweetId) {
-          _this2.push(null);
-          _this2.isLocked = false;
-          return;
-        }
-
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = tweets[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var tweet = _step.value;
-
-            _this2.push(tweet);
-            _this2._numberOfTweetsRead++;
-            if (_this2._numberOfTweetsRead >= _this2.count) {
-              debug('ConversationStream has read up to the max count');
-              break;
-            }
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator.return) {
-              _iterator.return();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        var hasZeroTweets = lastReadTweetId === undefined;
-        var hasDifferentLastTweet = _this2._lastReadTweetId !== lastReadTweetId;
-        var hasMoreTweets = !hasZeroTweets && hasDifferentLastTweet;
-        if (hasMoreTweets === false) {
-          debug('ConversationStream has no more tweets:', {
-            hasZeroTweets: hasZeroTweets,
-            hasDifferentLastTweet: hasDifferentLastTweet,
-            hasMoreTweets: hasMoreTweets
-          });
-          _this2.push(null);
-        } else {
-          debug('ConversationStream has more tweets:', {
-            hasZeroTweets: hasZeroTweets,
-            hasDifferentLastTweet: hasDifferentLastTweet,
-            hasMoreTweets: hasMoreTweets
-          });
-        }
-
-        if (tweets.minPosition) {
-          debug('ConversationStream sets the last min position to ' + tweets.minPosition);
-          _this2._lastMinPosition = tweets.minPosition;
-        }
-
-        debug('TimelineStream sets the last tweet to ' + lastReadTweetId);
-        _this2._lastReadTweetId = lastReadTweetId;
-
-        _this2.isLocked = false;
-        debug('ConversationStream is now unlocked');
-
-        if (hasMoreTweets) {
-          debug('ConversationStream has more tweets so calls this._read');
-          _this2._read();
-        }
-      }).catch(function (err) {
+        return Promise.all(extendedTweets);
+      })
+      // .then(tweets => {
+      //   const lastReadTweetId = tweets.length
+      //     ? tweets[tweets.length - 1].id
+      //     : undefined
+      //   if (this._lastReadTweetId === lastReadTweetId) {
+      //     this.push(null)
+      //     this.isLocked = false
+      //     return
+      //   }
+      //
+      //   for (const tweet of tweets) {
+      //     this.push(tweet)
+      //     this._numberOfTweetsRead++
+      //     if (this._numberOfTweetsRead >= this.count) {
+      //       debug('ConversationStream has read up to the max count')
+      //       break
+      //     }
+      //   }
+      //
+      //   const hasZeroTweets = lastReadTweetId === undefined
+      //   const hasDifferentLastTweet = this._lastReadTweetId !== lastReadTweetId
+      //   const hasMoreTweets = !hasZeroTweets && hasDifferentLastTweet
+      //   if (hasMoreTweets === false) {
+      //     debug('ConversationStream has no more tweets:', {
+      //       hasZeroTweets,
+      //       hasDifferentLastTweet,
+      //       hasMoreTweets
+      //     })
+      //     this.push(null)
+      //   } else {
+      //     debug('ConversationStream has more tweets:', {
+      //       hasZeroTweets,
+      //       hasDifferentLastTweet,
+      //       hasMoreTweets
+      //     })
+      //   }
+      //
+      //   if (tweets.minPosition) {
+      //     debug(
+      //       `ConversationStream sets the last min position to ${
+      //         tweets.minPosition
+      //       }`
+      //     )
+      //     this._lastMinPosition = tweets.minPosition
+      //   }
+      //
+      //   debug(`TimelineStream sets the last tweet to ${lastReadTweetId}`)
+      //   this._lastReadTweetId = lastReadTweetId
+      //
+      //   this.isLocked = false
+      //   debug('ConversationStream is now unlocked')
+      //
+      //   if (hasMoreTweets) {
+      //     debug('ConversationStream has more tweets so calls this._read')
+      //     this._read()
+      //   }
+      // })
+      .catch(function (err) {
         return _this2.emit('error', err);
       });
     }
